@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codeforces Problem Tag Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Codeforces Problem Tag Checker</h1>
+    <input type="text" id="problemUrl" placeholder="Enter Codeforces problem URL">
+    <button onclick="checkTags()">Check Tags</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    async function checkTags() {
+        const problemUrl = document.getElementById('problemUrl').value;
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = 'Checking...';
+
+        // const regex = /codeforces\.com\/contest\/(\d+)\/problem\/([A-Z])/;
+        const regex = /codeforces\.com\/problemset\/problem\/(\d+)\/([A-Z])/;
+        const match = problemUrl.match(regex);
+
+        if (!match) {
+            resultDiv.innerHTML = 'Invalid URL. Please enter a valid Codeforces problem URL.';
+            return;
+        }
+
+        const contestId = match[1];
+        const problemIndex = match[2];
+
+        const apiUrl = 'https://codeforces.com/api/problemset.problems';
+
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+
+            if (data.status !== 'OK') {
+                resultDiv.innerHTML = 'Error fetching data from Codeforces API';
+                return;
+            }
+
+            const problems = data.result.problems;
+            const problem = problems.find(p => p.contestId == contestId && p.index == problemIndex);
+
+            if (problem) {
+                const tags = problem.tags;
+                const targetTags = ['dp', 'dfs', 'dsu'];
+                const hasTargetTag = tags.some(tag => targetTags.includes(tag));
+
+                if (hasTargetTag) {
+                    resultDiv.innerHTML = `Problem ${contestId}${problemIndex} has one of the tags: dp, dfs, dsu.`;
+                } else {
+                    resultDiv.innerHTML = `Problem ${contestId}${problemIndex} does not have the tags: dp, dfs, dsu.`;
+                }
+            } else {
+                resultDiv.innerHTML = `Problem ${contestId}${problemIndex} not found.`;
+            }
+
+        } catch (error) {
+            resultDiv.innerHTML = 'An error occurred while fetching data.';
+        }
+    }
+</script>
+
+</body>
+</html>
